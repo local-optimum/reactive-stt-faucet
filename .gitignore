@@ -11,5 +11,9 @@ node_modules/
 # Environment
 .env
 
+# Next.js
+.next/
+next-env.d.ts
+
 # OS
 .DS_Store
