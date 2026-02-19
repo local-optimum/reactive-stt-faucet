@@ -1,0 +1,15 @@
+somnia-skills/
+
+# Foundry
+out/
+cache/
+broadcast/
+
+# Node
+node_modules/
+
+# Environment
+.env
+
+# OS
+.DS_Store
