@@ -6,7 +6,7 @@ import { FAUCET_HANDLER_ADDRESS, faucetHandlerABI } from "@/lib/contracts";
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-xl px-6 py-4 text-center min-w-[140px]">
+    <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-4 text-center">
       <p className="text-[11px] text-white/40 uppercase tracking-wider mb-1.5">{label}</p>
       <p className="text-base font-semibold text-white whitespace-nowrap">{value}</p>
     </div>
@@ -34,7 +34,7 @@ export function FaucetStats() {
   });
 
   return (
-    <div className="flex flex-wrap justify-center gap-3 w-full max-w-xl mx-auto">
+    <div className="grid grid-cols-3 gap-3 w-full">
       <StatCard
         label="Faucet Balance"
         value={

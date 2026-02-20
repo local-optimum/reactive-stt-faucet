@@ -140,5 +140,26 @@ contract FaucetHandlerTest is Test {
         handler.onEvent(address(0), _buildTopics(requester), "");
     }
 
+    function test_OwnerCanSetParams() public {
+        handler.setCooldown(1 hours);
+        handler.setDripAmount(1 ether);
+        handler.setMaxBalance(5 ether);
+
+        assertEq(handler.cooldown(), 1 hours);
+        assertEq(handler.dripAmount(), 1 ether);
+        assertEq(handler.maxBalance(), 5 ether);
+    }
+
+    function test_NonOwnerCannotSetParams() public {
+        vm.startPrank(requester);
+        vm.expectRevert("Not owner");
+        handler.setCooldown(1 hours);
+        vm.expectRevert("Not owner");
+        handler.setDripAmount(1 ether);
+        vm.expectRevert("Not owner");
+        handler.setMaxBalance(5 ether);
+        vm.stopPrank();
+    }
+
     receive() external payable {}
 }

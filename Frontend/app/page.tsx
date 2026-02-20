@@ -33,53 +33,55 @@ export default function Home() {
         {/* Header */}
         <header className="flex items-center justify-between px-6 py-4 border-b border-white/5">
           <span className="text-lg font-semibold text-white/90 tracking-tight">
-            Somnia
+            Somnia Testnet
           </span>
           <ConnectButton />
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col items-center px-4 py-12 gap-10">
-          {/* Hero Title */}
-          <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-              Reactive Testnet Faucet
-            </h1>
-            <p className="text-white/40 text-sm">
-              0.5 STT &middot; 24h cooldown &middot; Powered by Somnia Reactivity
-            </p>
-          </div>
-
-          {/* Claim Section — centered card */}
-          <div className="bg-white/[0.03] backdrop-blur border border-white/10 rounded-2xl p-8 sm:p-10 flex flex-col items-center gap-6 w-full max-w-md">
-            {isConnected && balance ? (
-              <p className="text-sm text-white/60">
-                Your balance:{" "}
-                <span className="text-white font-semibold">
-                  {Number(formatEther(balance.value)).toFixed(4)} STT
-                </span>
+        <main className="flex-1 flex flex-col items-center px-4 py-12">
+          <div className="w-full max-w-lg flex flex-col gap-10">
+            {/* Hero Title */}
+            <div className="text-center">
+              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                Reactive Testnet Faucet
+              </h1>
+              <p className="text-white/40 text-sm">
+                0.5 STT &middot; 24h cooldown &middot; Powered by Somnia Reactivity
               </p>
-            ) : null}
-
-            {/* Button */}
-            <div className="py-4">
-              <HeroButton
-                state={state}
-                disabled={!isEligible || state !== "idle"}
-                disabledReason={disabledReason}
-                onClick={claim}
-              />
             </div>
 
-            {/* Cooldown timer — compact, below button */}
-            {isConnected && <CooldownTimer secondsLeft={secondsLeft} />}
+            {/* Claim Section */}
+            <div className="bg-white/[0.03] backdrop-blur border border-white/10 rounded-2xl p-8 sm:p-10 flex flex-col items-center gap-6">
+              {isConnected && balance ? (
+                <p className="text-sm text-white/60">
+                  Your balance:{" "}
+                  <span className="text-white font-semibold">
+                    {Number(formatEther(balance.value)).toFixed(4)} STT
+                  </span>
+                </p>
+              ) : null}
+
+              {/* Button */}
+              <div className="py-4">
+                <HeroButton
+                  state={state}
+                  disabled={!isEligible || state !== "idle"}
+                  disabledReason={disabledReason}
+                  onClick={claim}
+                />
+              </div>
+
+              {/* Cooldown timer */}
+              {isConnected && <CooldownTimer secondsLeft={secondsLeft} />}
+            </div>
+
+            {/* Faucet Stats */}
+            <FaucetStats />
+
+            {/* Live Feed */}
+            <LiveFeed events={events} />
           </div>
-
-          {/* Faucet Stats — full width row */}
-          <FaucetStats />
-
-          {/* Live Feed */}
-          <LiveFeed events={events} />
         </main>
       </div>
     </NetworkGuard>

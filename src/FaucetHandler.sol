@@ -13,14 +13,31 @@ contract FaucetHandler is SomniaEventHandler, ReentrancyGuard {
     uint256 public totalGranted;
     uint256 public totalClaimers;
 
-    uint256 public constant COOLDOWN = 24 hours;
-    uint256 public constant DRIP_AMOUNT = 0.5 ether;
-    uint256 public constant MAX_BALANCE = 1 ether;
+    uint256 public cooldown = 24 hours;
+    uint256 public dripAmount = 0.5 ether;
+    uint256 public maxBalance = 1 ether;
 
     address public owner;
 
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
     constructor() {
         owner = msg.sender;
+    }
+
+    function setCooldown(uint256 _cooldown) external onlyOwner {
+        cooldown = _cooldown;
+    }
+
+    function setDripAmount(uint256 _dripAmount) external onlyOwner {
+        dripAmount = _dripAmount;
+    }
+
+    function setMaxBalance(uint256 _maxBalance) external onlyOwner {
+        maxBalance = _maxBalance;
     }
 
     function _onEvent(address, bytes32[] calldata eventTopics, bytes calldata) internal override nonReentrant {
@@ -36,30 +53,29 @@ contract FaucetHandler is SomniaEventHandler, ReentrancyGuard {
             totalClaimers++;
         }
         lastGrant[requester] = block.timestamp;
-        totalGranted += DRIP_AMOUNT;
+        totalGranted += dripAmount;
 
-        (bool sent,) = payable(requester).call{value: DRIP_AMOUNT}("");
+        (bool sent,) = payable(requester).call{value: dripAmount}("");
         require(sent, "Transfer failed");
 
-        emit FaucetGranted(requester, DRIP_AMOUNT);
+        emit FaucetGranted(requester, dripAmount);
     }
 
     function _isEligible(address requester) internal view returns (bool, string memory) {
         uint256 last = lastGrant[requester];
-        if (last != 0 && block.timestamp - last < COOLDOWN) {
+        if (last != 0 && block.timestamp - last < cooldown) {
             return (false, "cooldown");
         }
-        if (requester.balance >= MAX_BALANCE) {
+        if (requester.balance >= maxBalance) {
             return (false, "balance_too_high");
         }
-        if (address(this).balance < DRIP_AMOUNT) {
+        if (address(this).balance < dripAmount) {
             return (false, "faucet_empty");
         }
         return (true, "");
     }
 
-    function withdraw() external {
-        require(msg.sender == owner, "Not owner");
+    function withdraw() external onlyOwner {
         (bool sent,) = payable(owner).call{value: address(this).balance}("");
         require(sent, "Withdraw failed");
     }
