@@ -91,6 +91,17 @@ export default function Home() {
             <LiveFeed events={events} />
           </div>
         </main>
+        {/* Footer */}
+        <footer className="py-6 text-center text-xs text-white/30">
+          Built on Somnia, powered by{" "}
+          <a href="https://docs.somnia.network/concepts/somnia-blockchain/on-chain-reactivity" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/50">
+            reactivity
+          </a>
+          , by local-optimum &middot;{" "}
+          <a href="https://github.com/local-optimum/reactive-stt-faucet" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/50">
+            github
+          </a>
+        </footer>
       </div>
     </NetworkGuard>
   );
