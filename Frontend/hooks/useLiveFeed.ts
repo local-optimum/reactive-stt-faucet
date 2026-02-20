@@ -41,7 +41,6 @@ export function useLiveFeed() {
       const result = await sdk.subscribe({
         ethCalls: [],
         eventContractSources: [FAUCET_HANDLER_ADDRESS],
-        topicOverrides: [GRANTED_TOPIC, DENIED_TOPIC],
         onData: (data: { result: { topics: `0x${string}`[]; data: `0x${string}` } }) => {
           if (cancelled) return;
           const { topics, data: eventData } = data.result;

@@ -20,6 +20,27 @@ export const faucetRequestABI = [
 
 export const faucetHandlerABI = [
   {
+    name: "cooldown",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "maxBalance",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "dripAmount",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
     name: "lastGrant",
     type: "function",
     stateMutability: "view",

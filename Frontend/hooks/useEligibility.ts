@@ -4,10 +4,20 @@ import { useReadContract, useBalance } from "wagmi";
 import { useEffect, useState } from "react";
 import { FAUCET_HANDLER_ADDRESS, faucetHandlerABI } from "@/lib/contracts";
 
-const COOLDOWN = 24 * 60 * 60; // 24 hours in seconds
-
 export function useEligibility(address: `0x${string}` | undefined) {
   const [secondsLeft, setSecondsLeft] = useState(0);
+
+  const { data: cooldown } = useReadContract({
+    address: FAUCET_HANDLER_ADDRESS,
+    abi: faucetHandlerABI,
+    functionName: "cooldown",
+  });
+
+  const { data: maxBalance } = useReadContract({
+    address: FAUCET_HANDLER_ADDRESS,
+    abi: faucetHandlerABI,
+    functionName: "maxBalance",
+  });
 
   const { data: lastGrant, refetch: refetchLastGrant } = useReadContract({
     address: FAUCET_HANDLER_ADDRESS,
@@ -27,6 +37,8 @@ export function useEligibility(address: `0x${string}` | undefined) {
     refetchBalance();
   };
 
+  const cooldownSecs = cooldown ? Number(cooldown) : 3600;
+
   useEffect(() => {
     if (!lastGrant) {
       setSecondsLeft(0);
@@ -42,18 +54,19 @@ export function useEligibility(address: `0x${string}` | undefined) {
     const update = () => {
       const now = Math.floor(Date.now() / 1000);
       const elapsed = now - lastGrantNum;
-      const remaining = Math.max(0, COOLDOWN - elapsed);
+      const remaining = Math.max(0, cooldownSecs - elapsed);
       setSecondsLeft(remaining);
     };
 
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, [lastGrant]);
+  }, [lastGrant, cooldownSecs]);
 
   const isOnCooldown = secondsLeft > 0;
+  const maxBal = maxBalance ?? BigInt(5e18);
   const balanceTooHigh =
-    balance !== undefined && balance.value >= BigInt(1e18);
+    balance !== undefined && balance.value >= maxBal;
   const isEligible = !!address && !isOnCooldown && !balanceTooHigh;
 
   return {
@@ -61,6 +74,7 @@ export function useEligibility(address: `0x${string}` | undefined) {
     isOnCooldown,
     balanceTooHigh,
     secondsLeft,
+    cooldownSecs,
     balance,
     refetch,
   };

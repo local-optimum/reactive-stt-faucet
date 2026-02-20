@@ -1,6 +1,5 @@
 "use client";
 
-const TOTAL_COOLDOWN = 24 * 60 * 60;
 const RADIUS = 40;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -13,11 +12,12 @@ function formatTime(seconds: number): string {
 
 interface CooldownTimerProps {
   secondsLeft: number;
+  totalCooldown: number;
 }
 
-export function CooldownTimer({ secondsLeft }: CooldownTimerProps) {
+export function CooldownTimer({ secondsLeft, totalCooldown }: CooldownTimerProps) {
   const isReady = secondsLeft === 0;
-  const progress = 1 - secondsLeft / TOTAL_COOLDOWN;
+  const progress = totalCooldown > 0 ? 1 - secondsLeft / totalCooldown : 1;
   const offset = CIRCUMFERENCE * (1 - progress);
 
   return (

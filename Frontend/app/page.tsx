@@ -14,7 +14,7 @@ import { useLiveFeed } from "@/hooks/useLiveFeed";
 
 export default function Home() {
   const { address, isConnected } = useAccount();
-  const { isEligible, isOnCooldown, balanceTooHigh, secondsLeft, balance, refetch } =
+  const { isEligible, isOnCooldown, balanceTooHigh, secondsLeft, cooldownSecs, balance, refetch } =
     useEligibility(address);
   const { claim, state } = useClaim(refetch);
   const events = useLiveFeed();
@@ -73,7 +73,7 @@ export default function Home() {
               </div>
 
               {/* Cooldown timer */}
-              {isConnected && <CooldownTimer secondsLeft={secondsLeft} />}
+              {isConnected && <CooldownTimer secondsLeft={secondsLeft} totalCooldown={cooldownSecs} />}
             </div>
 
             {/* Faucet Stats */}
