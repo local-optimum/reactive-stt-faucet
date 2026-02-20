@@ -16,7 +16,7 @@ const stateLabel: Record<ClaimState, string> = {
   idle: "Request STT",
   pending: "Requesting...",
   confirming: "Confirming...",
-  success: "0.5 STT incoming!",
+  success: "1 STT incoming!",
   denied: "Denied",
   error: "Error",
 };

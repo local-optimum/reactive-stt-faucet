@@ -47,7 +47,7 @@ export default function Home() {
                 Reactive Testnet Faucet
               </h1>
               <p className="text-white/40 text-sm">
-                0.5 STT &middot; 24h cooldown &middot; Powered by Somnia Reactivity
+                1 STT &middot; 1h cooldown &middot; Powered by Somnia Reactivity
               </p>
             </div>
 

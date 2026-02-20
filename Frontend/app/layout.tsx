@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Reactive Testnet Faucet",
-  description: "Claim 0.5 STT on Somnia Testnet — powered by on-chain Reactivity",
+  description: "Claim 1 STT on Somnia Testnet — powered by on-chain Reactivity",
 };
 
 export default function RootLayout({

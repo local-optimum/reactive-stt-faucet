@@ -58,7 +58,7 @@ export function LiveFeed({ events }: LiveFeedProps) {
                   }`}
                 >
                   {event.type === "granted"
-                    ? "received 0.5 STT"
+                    ? "received 1 STT"
                     : `denied \u00B7 ${event.reason || "cooldown"}`}
                 </span>
                 <span className="text-xs text-white/30">{timeAgo(event.timestamp)}</span>
