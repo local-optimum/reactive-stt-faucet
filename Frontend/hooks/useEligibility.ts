@@ -76,6 +76,7 @@ export function useEligibility(address: `0x${string}` | undefined) {
     secondsLeft,
     cooldownSecs,
     balance,
+    maxBal,
     refetch,
   };
 }

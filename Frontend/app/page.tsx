@@ -2,7 +2,7 @@
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useBalance } from "wagmi";
-import { formatEther } from "viem";
+import { formatEther, formatUnits } from "viem";
 import { HeroButton } from "@/components/HeroButton";
 import { CooldownTimer } from "@/components/CooldownTimer";
 import { LiveFeed } from "@/components/LiveFeed";
@@ -14,15 +14,16 @@ import { useLiveFeed } from "@/hooks/useLiveFeed";
 
 export default function Home() {
   const { address, isConnected } = useAccount();
-  const { isEligible, isOnCooldown, balanceTooHigh, secondsLeft, cooldownSecs, balance, refetch } =
+  const { isEligible, isOnCooldown, balanceTooHigh, secondsLeft, cooldownSecs, balance, maxBal, refetch } =
     useEligibility(address);
   const { claim, state } = useClaim(refetch);
   const events = useLiveFeed();
 
+  const maxBalFormatted = Number(formatUnits(maxBal, 18));
   const disabledReason = !isConnected
     ? "Connect Wallet"
     : balanceTooHigh
-    ? "Balance Too High"
+    ? `Balance ≥ ${maxBalFormatted} STT`
     : isOnCooldown
     ? "Cooldown Active"
     : undefined;
@@ -47,19 +48,26 @@ export default function Home() {
                 Reactive Testnet Faucet
               </h1>
               <p className="text-white/40 text-sm">
-                1 STT &middot; 1h cooldown &middot; Powered by Somnia Reactivity
+                1 STT &middot; 1h cooldown &middot; {maxBalFormatted} STT max balance
               </p>
             </div>
 
             {/* Claim Section */}
             <div className="bg-white/[0.03] backdrop-blur border border-white/10 rounded-2xl p-8 sm:p-10 flex flex-col items-center gap-6">
               {isConnected && balance ? (
-                <p className="text-sm text-white/60">
-                  Your balance:{" "}
-                  <span className="text-white font-semibold">
-                    {Number(formatEther(balance.value)).toFixed(4)} STT
-                  </span>
-                </p>
+                <div className="flex flex-col items-center gap-1">
+                  <p className="text-sm text-white/60">
+                    Your balance:{" "}
+                    <span className="text-white font-semibold">
+                      {Number(formatEther(balance.value)).toFixed(4)} STT
+                    </span>
+                  </p>
+                  {balanceTooHigh && (
+                    <p className="text-xs text-red-400/80">
+                      Must be below {maxBalFormatted} STT to claim
+                    </p>
+                  )}
+                </div>
               ) : null}
 
               {/* Button */}
