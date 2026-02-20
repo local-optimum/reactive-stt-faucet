@@ -21,7 +21,7 @@ interface LiveFeedProps {
 
 export function LiveFeed({ events }: LiveFeedProps) {
   return (
-    <div className="w-full max-w-lg mx-auto">
+    <div className="w-full max-w-xl mx-auto">
       <h3 className="text-sm font-medium text-white/60 mb-3 uppercase tracking-wider">
         Live Activity
       </h3>
