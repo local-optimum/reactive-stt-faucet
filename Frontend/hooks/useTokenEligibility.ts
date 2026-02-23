@@ -91,6 +91,7 @@ export function useTokenEligibility(address: `0x${string}` | undefined) {
     cooldownSecs,
     maxBal,
     drip,
+    tokenBalance,
     refetch,
   };
 }

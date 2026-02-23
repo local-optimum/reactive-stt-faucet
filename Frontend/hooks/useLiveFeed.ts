@@ -12,6 +12,7 @@ export type FeedEvent = {
   type: "granted" | "denied";
   token: "STT" | "SOMUSD";
   reason?: string;
+  amount?: bigint;
   timestamp: number;
 };
 
@@ -57,7 +58,12 @@ export function useLiveFeed() {
           const id = `${Date.now()}-${requester}`;
 
           if (topic0 === GRANTED_TOPIC) {
-            addEvent({ id, address: requester, type: "granted", token: "STT", timestamp: Date.now() });
+            let amount: bigint | undefined;
+            try {
+              const [decoded] = decodeAbiParameters([{ name: "amount", type: "uint256" }], eventData);
+              amount = decoded;
+            } catch {}
+            addEvent({ id, address: requester, type: "granted", token: "STT", amount, timestamp: Date.now() });
           } else if (topic0 === DENIED_TOPIC) {
             let reason = "cooldown";
             try {
@@ -69,7 +75,12 @@ export function useLiveFeed() {
             } catch {}
             addEvent({ id, address: requester, type: "denied", token: "STT", reason, timestamp: Date.now() });
           } else if (topic0 === TOKEN_GRANTED_TOPIC) {
-            addEvent({ id, address: requester, type: "granted", token: "SOMUSD", timestamp: Date.now() });
+            let amount: bigint | undefined;
+            try {
+              const [decoded] = decodeAbiParameters([{ name: "amount", type: "uint256" }], eventData);
+              amount = decoded;
+            } catch {}
+            addEvent({ id, address: requester, type: "granted", token: "SOMUSD", amount, timestamp: Date.now() });
           } else if (topic0 === TOKEN_DENIED_TOPIC) {
             let reason = "cooldown";
             try {

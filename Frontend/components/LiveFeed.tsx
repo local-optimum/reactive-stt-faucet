@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { formatEther, formatUnits } from "viem";
 import type { FeedEvent } from "@/hooks/useLiveFeed";
 
 function truncateAddress(addr: string): string {
@@ -16,8 +17,13 @@ function timeAgo(ts: number): string {
 }
 
 function grantLabel(event: FeedEvent): string {
-  if (event.token === "SOMUSD") return "received 1000 SOMUSD";
-  return "received 1 STT";
+  if (event.amount !== undefined) {
+    if (event.token === "SOMUSD") {
+      return `received ${Number(formatUnits(event.amount, 6)).toLocaleString()} SOMUSD`;
+    }
+    return `received ${Number(formatEther(event.amount))} STT`;
+  }
+  return `received ${event.token}`;
 }
 
 interface LiveFeedProps {

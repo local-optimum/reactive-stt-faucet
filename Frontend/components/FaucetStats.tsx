@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useReadContract, useBalance } from "wagmi";
 import { formatEther, formatUnits } from "viem";
 import {
@@ -11,6 +12,13 @@ import {
   erc20ABI,
 } from "@/lib/contracts";
 
+function compactNumber(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  if (Number.isInteger(n)) return n.toString();
+  return n.toFixed(1);
+}
+
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-4 text-center">
@@ -20,25 +28,33 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function SttFaucetStats() {
-  const { data: faucetBalance } = useBalance({
+export function SttFaucetStats({ refetchKey }: { refetchKey?: number }) {
+  const { data: faucetBalance, refetch: refetchBalance } = useBalance({
     address: FAUCET_HANDLER_ADDRESS,
     query: { refetchInterval: 30_000 },
   });
 
-  const { data: totalGranted } = useReadContract({
+  const { data: totalGranted, refetch: refetchGranted } = useReadContract({
     address: FAUCET_HANDLER_ADDRESS,
     abi: faucetHandlerABI,
     functionName: "totalGranted",
     query: { refetchInterval: 30_000 },
   });
 
-  const { data: totalClaimers } = useReadContract({
+  const { data: totalClaimers, refetch: refetchClaimers } = useReadContract({
     address: FAUCET_HANDLER_ADDRESS,
     abi: faucetHandlerABI,
     functionName: "totalClaimers",
     query: { refetchInterval: 30_000 },
   });
+
+  useEffect(() => {
+    if (refetchKey && refetchKey > 0) {
+      refetchBalance();
+      refetchGranted();
+      refetchClaimers();
+    }
+  }, [refetchKey, refetchBalance, refetchGranted, refetchClaimers]);
 
   return (
     <div className="grid grid-cols-3 gap-3 w-full">
@@ -46,7 +62,7 @@ export function SttFaucetStats() {
         label={"Faucet\nBalance"}
         value={
           faucetBalance
-            ? `${Number(formatEther(faucetBalance.value)).toFixed(1)} STT`
+            ? compactNumber(Number(formatEther(faucetBalance.value)))
             : "..."
         }
       />
@@ -54,7 +70,7 @@ export function SttFaucetStats() {
         label={"Total\nGranted"}
         value={
           totalGranted !== undefined
-            ? `${Number(formatEther(totalGranted)).toFixed(1)} STT`
+            ? compactNumber(Number(formatEther(totalGranted)))
             : "..."
         }
       />
@@ -66,8 +82,8 @@ export function SttFaucetStats() {
   );
 }
 
-export function TokenFaucetStats() {
-  const { data: tokenHandlerBalance } = useReadContract({
+export function TokenFaucetStats({ refetchKey }: { refetchKey?: number }) {
+  const { data: tokenHandlerBalance, refetch: refetchBalance } = useReadContract({
     address: SOMUSD_ADDRESS,
     abi: erc20ABI,
     functionName: "balanceOf",
@@ -75,19 +91,27 @@ export function TokenFaucetStats() {
     query: { refetchInterval: 30_000 },
   });
 
-  const { data: tokenTotalGranted } = useReadContract({
+  const { data: tokenTotalGranted, refetch: refetchGranted } = useReadContract({
     address: TOKEN_FAUCET_HANDLER_ADDRESS,
     abi: tokenFaucetHandlerABI,
     functionName: "totalGranted",
     query: { refetchInterval: 30_000 },
   });
 
-  const { data: tokenTotalClaimers } = useReadContract({
+  const { data: tokenTotalClaimers, refetch: refetchClaimers } = useReadContract({
     address: TOKEN_FAUCET_HANDLER_ADDRESS,
     abi: tokenFaucetHandlerABI,
     functionName: "totalClaimers",
     query: { refetchInterval: 30_000 },
   });
+
+  useEffect(() => {
+    if (refetchKey && refetchKey > 0) {
+      refetchBalance();
+      refetchGranted();
+      refetchClaimers();
+    }
+  }, [refetchKey, refetchBalance, refetchGranted, refetchClaimers]);
 
   return (
     <div className="grid grid-cols-3 gap-3 w-full">
@@ -95,7 +119,7 @@ export function TokenFaucetStats() {
         label={"Faucet\nBalance"}
         value={
           tokenHandlerBalance !== undefined
-            ? `${Number(formatUnits(tokenHandlerBalance, 6)).toLocaleString()}`
+            ? compactNumber(Number(formatUnits(tokenHandlerBalance, 6)))
             : "..."
         }
       />
@@ -103,7 +127,7 @@ export function TokenFaucetStats() {
         label={"Total\nGranted"}
         value={
           tokenTotalGranted !== undefined
-            ? `${Number(formatUnits(tokenTotalGranted, 6)).toLocaleString()}`
+            ? compactNumber(Number(formatUnits(tokenTotalGranted, 6)))
             : "..."
         }
       />

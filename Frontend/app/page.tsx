@@ -1,7 +1,8 @@
 "use client";
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount } from "wagmi";
+import { useEffect } from "react";
 import { formatEther, formatUnits } from "viem";
 import { HeroButton } from "@/components/HeroButton";
 import { CooldownTimer } from "@/components/CooldownTimer";
@@ -13,11 +14,7 @@ import { useClaim } from "@/hooks/useClaim";
 import { useTokenEligibility } from "@/hooks/useTokenEligibility";
 import { useTokenClaim } from "@/hooks/useTokenClaim";
 import { useLiveFeed } from "@/hooks/useLiveFeed";
-import {
-  TOKEN_FAUCET_HANDLER_ADDRESS,
-  SOMUSD_ADDRESS,
-  erc20ABI,
-} from "@/lib/contracts";
+import { TOKEN_FAUCET_HANDLER_ADDRESS } from "@/lib/contracts";
 
 const hasTokenFaucet = TOKEN_FAUCET_HANDLER_ADDRESS && TOKEN_FAUCET_HANDLER_ADDRESS !== "0x";
 
@@ -38,15 +35,15 @@ export default function Home() {
   const tokenEligibility = useTokenEligibility(address);
   const tokenClaim = useTokenClaim(tokenEligibility.refetch);
 
-  const { data: somusdBalance } = useReadContract({
-    address: SOMUSD_ADDRESS,
-    abi: erc20ABI,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
-    query: { enabled: !!address },
-  });
-
   const events = useLiveFeed();
+
+  // Refetch balances/cooldowns when a new live event arrives
+  useEffect(() => {
+    if (events.length > 0) {
+      refetch();
+      tokenEligibility.refetch();
+    }
+  }, [events.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const maxBalFormatted = Number(formatUnits(maxBal, 18));
   const sttDripFormatted = Number(formatEther(drip));
@@ -131,7 +128,7 @@ export default function Home() {
               {isConnected && <CooldownTimer secondsLeft={secondsLeft} totalCooldown={cooldownSecs} />}
 
               {/* STT Stats */}
-              <SttFaucetStats />
+              <SttFaucetStats refetchKey={events.length} />
             </div>
 
             {/* SOMUSD Claim Section */}
@@ -142,12 +139,12 @@ export default function Home() {
                   {tokenDripFormatted} SOMUSD &middot; {formatCooldown(tokenEligibility.cooldownSecs)} cooldown &middot; {tokenMaxBalFormatted} SOMUSD max balance
                 </p>
 
-                {isConnected && somusdBalance !== undefined ? (
+                {isConnected && tokenEligibility.tokenBalance !== undefined ? (
                   <div className="flex flex-col items-center gap-1">
                     <p className="text-sm text-white/60">
                       Your balance:{" "}
                       <span className="text-white font-semibold">
-                        {Number(formatUnits(somusdBalance, 6)).toLocaleString()} SOMUSD
+                        {Number(formatUnits(tokenEligibility.tokenBalance, 6)).toLocaleString()} SOMUSD
                       </span>
                     </p>
                     {tokenEligibility.balanceTooHigh && (
@@ -179,7 +176,7 @@ export default function Home() {
                 )}
 
                 {/* SOMUSD Stats */}
-                <TokenFaucetStats />
+                <TokenFaucetStats refetchKey={events.length} />
               </div>
             )}
 
