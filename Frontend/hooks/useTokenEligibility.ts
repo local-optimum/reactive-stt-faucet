@@ -1,7 +1,7 @@
 "use client";
 
 import { useReadContract } from "wagmi";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   TOKEN_FAUCET_HANDLER_ADDRESS,
   tokenFaucetHandlerABI,
@@ -46,10 +46,10 @@ export function useTokenEligibility(address: `0x${string}` | undefined) {
     query: { enabled: !!address },
   });
 
-  const refetch = () => {
+  const refetch = useCallback(() => {
     refetchLastGrant();
     refetchTokenBalance();
-  };
+  }, [refetchLastGrant, refetchTokenBalance]);
 
   const cooldownSecs = cooldown ? Number(cooldown) : 86400;
 

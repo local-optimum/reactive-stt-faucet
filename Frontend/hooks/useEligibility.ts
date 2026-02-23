@@ -1,7 +1,7 @@
 "use client";
 
 import { useReadContract, useBalance } from "wagmi";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FAUCET_HANDLER_ADDRESS, faucetHandlerABI } from "@/lib/contracts";
 
 export function useEligibility(address: `0x${string}` | undefined) {
@@ -38,10 +38,10 @@ export function useEligibility(address: `0x${string}` | undefined) {
     query: { enabled: !!address },
   });
 
-  const refetch = () => {
+  const refetch = useCallback(() => {
     refetchLastGrant();
     refetchBalance();
-  };
+  }, [refetchLastGrant, refetchBalance]);
 
   const cooldownSecs = cooldown ? Number(cooldown) : 3600;
 

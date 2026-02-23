@@ -1,7 +1,7 @@
 "use client";
 
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TOKEN_FAUCET_REQUEST_ADDRESS, tokenFaucetRequestABI } from "@/lib/contracts";
 
 export type ClaimState =
@@ -22,6 +22,9 @@ export function useTokenClaim(onSuccess?: () => void) {
     error: writeError,
     reset,
   } = useWriteContract();
+
+  const resetTimer = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => () => clearTimeout(resetTimer.current), []);
 
   const { isSuccess: isConfirmed, isError: txFailed } =
     useWaitForTransactionReceipt({ hash });
@@ -46,11 +49,11 @@ export function useTokenClaim(onSuccess?: () => void) {
     if (isConfirmed && state === "confirming") {
       setState("success");
       onSuccess?.();
-      const timer = setTimeout(() => {
+      clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => {
         setState("idle");
         reset();
       }, 3000);
-      return () => clearTimeout(timer);
     }
   }, [isConfirmed, state, onSuccess, reset]);
 
@@ -58,12 +61,12 @@ export function useTokenClaim(onSuccess?: () => void) {
     if (writeError) {
       setState("error");
       setErrorMsg(writeError.message.split("\n")[0]);
-      const timer = setTimeout(() => {
+      clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => {
         setState("idle");
         reset();
         setErrorMsg("");
       }, 3000);
-      return () => clearTimeout(timer);
     }
   }, [writeError, reset]);
 
@@ -71,12 +74,12 @@ export function useTokenClaim(onSuccess?: () => void) {
     if (txFailed) {
       setState("error");
       setErrorMsg("Transaction failed");
-      const timer = setTimeout(() => {
+      clearTimeout(resetTimer.current);
+      resetTimer.current = setTimeout(() => {
         setState("idle");
         reset();
         setErrorMsg("");
       }, 3000);
-      return () => clearTimeout(timer);
     }
   }, [txFailed, reset]);
 
