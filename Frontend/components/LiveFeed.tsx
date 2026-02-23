@@ -15,6 +15,11 @@ function timeAgo(ts: number): string {
   return `${minutes}m ago`;
 }
 
+function grantLabel(event: FeedEvent): string {
+  if (event.token === "SOMUSD") return "received 1000 SOMUSD";
+  return "received 1 STT";
+}
+
 interface LiveFeedProps {
   events: FeedEvent[];
 }
@@ -46,7 +51,11 @@ export function LiveFeed({ events }: LiveFeedProps) {
               >
                 <div
                   className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    event.type === "granted" ? "bg-accent" : "bg-accent-purple/60"
+                    event.type === "granted"
+                      ? event.token === "SOMUSD"
+                        ? "bg-green-400"
+                        : "bg-accent"
+                      : "bg-accent-purple/60"
                   }`}
                 />
                 <span className="font-mono text-sm text-white/80">
@@ -54,11 +63,15 @@ export function LiveFeed({ events }: LiveFeedProps) {
                 </span>
                 <span
                   className={`text-sm flex-1 ${
-                    event.type === "granted" ? "text-accent" : "text-accent-purple"
+                    event.type === "granted"
+                      ? event.token === "SOMUSD"
+                        ? "text-green-400"
+                        : "text-accent"
+                      : "text-accent-purple"
                   }`}
                 >
                   {event.type === "granted"
-                    ? "received 1 STT"
+                    ? grantLabel(event)
                     : `denied \u00B7 ${event.reason || "cooldown"}`}
                 </span>
                 <span className="text-xs text-white/30">{timeAgo(event.timestamp)}</span>

@@ -1,30 +1,67 @@
 "use client";
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { formatEther, formatUnits } from "viem";
 import { HeroButton } from "@/components/HeroButton";
 import { CooldownTimer } from "@/components/CooldownTimer";
 import { LiveFeed } from "@/components/LiveFeed";
-import { FaucetStats } from "@/components/FaucetStats";
+import { SttFaucetStats, TokenFaucetStats } from "@/components/FaucetStats";
 import { NetworkGuard } from "@/components/NetworkGuard";
 import { useEligibility } from "@/hooks/useEligibility";
 import { useClaim } from "@/hooks/useClaim";
+import { useTokenEligibility } from "@/hooks/useTokenEligibility";
+import { useTokenClaim } from "@/hooks/useTokenClaim";
 import { useLiveFeed } from "@/hooks/useLiveFeed";
+import {
+  TOKEN_FAUCET_HANDLER_ADDRESS,
+  SOMUSD_ADDRESS,
+  erc20ABI,
+} from "@/lib/contracts";
+
+const hasTokenFaucet = TOKEN_FAUCET_HANDLER_ADDRESS && TOKEN_FAUCET_HANDLER_ADDRESS !== "0x";
+
+function formatCooldown(secs: number): string {
+  if (secs >= 3600) {
+    const h = secs / 3600;
+    return h === 1 ? "1h" : `${h}h`;
+  }
+  return `${secs / 60}m`;
+}
 
 export default function Home() {
   const { address, isConnected } = useAccount();
-  const { isEligible, isOnCooldown, balanceTooHigh, secondsLeft, cooldownSecs, balance, maxBal, refetch } =
+  const { isEligible, isOnCooldown, balanceTooHigh, secondsLeft, cooldownSecs, balance, maxBal, drip, refetch } =
     useEligibility(address);
   const { claim, state } = useClaim(refetch);
+
+  const tokenEligibility = useTokenEligibility(address);
+  const tokenClaim = useTokenClaim(tokenEligibility.refetch);
+
+  const { data: somusdBalance } = useReadContract({
+    address: SOMUSD_ADDRESS,
+    abi: erc20ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
+
   const events = useLiveFeed();
 
   const maxBalFormatted = Number(formatUnits(maxBal, 18));
+  const sttDripFormatted = Number(formatEther(drip));
   const disabledReason = !isConnected
     ? "Connect Wallet"
     : balanceTooHigh
     ? `Balance ≥ ${maxBalFormatted} STT`
     : isOnCooldown
+    ? "Cooldown Active"
+    : undefined;
+
+  const tokenDripFormatted = Number(formatUnits(tokenEligibility.drip, 6)).toLocaleString();
+  const tokenDisabledReason = !isConnected
+    ? "Connect Wallet"
+    : tokenEligibility.isOnCooldown
     ? "Cooldown Active"
     : undefined;
 
@@ -48,12 +85,17 @@ export default function Home() {
                 Reactive Testnet Faucet
               </h1>
               <p className="text-white/40 text-sm">
-                1 STT &middot; 1h cooldown &middot; {maxBalFormatted} STT max balance
+                STT &amp; SOMUSD &middot; powered by on-chain Reactivity
               </p>
             </div>
 
-            {/* Claim Section */}
+            {/* STT Claim Section */}
             <div className="bg-white/[0.03] backdrop-blur border border-white/10 rounded-2xl p-8 sm:p-10 flex flex-col items-center gap-6">
+              <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">STT Faucet</h2>
+              <p className="text-white/40 text-xs">
+                {sttDripFormatted} STT &middot; {formatCooldown(cooldownSecs)} cooldown &middot; {maxBalFormatted} STT max balance
+              </p>
+
               {isConnected && balance ? (
                 <div className="flex flex-col items-center gap-1">
                   <p className="text-sm text-white/60">
@@ -77,15 +119,61 @@ export default function Home() {
                   disabled={!isEligible || state !== "idle"}
                   disabledReason={disabledReason}
                   onClick={claim}
+                  tokenLabel="STT"
+                  successLabel={`${sttDripFormatted} STT incoming!`}
                 />
               </div>
 
               {/* Cooldown timer */}
               {isConnected && <CooldownTimer secondsLeft={secondsLeft} totalCooldown={cooldownSecs} />}
+
+              {/* STT Stats */}
+              <SttFaucetStats />
             </div>
 
-            {/* Faucet Stats */}
-            <FaucetStats />
+            {/* SOMUSD Claim Section */}
+            {hasTokenFaucet && (
+              <div className="bg-white/[0.03] backdrop-blur border border-white/10 rounded-2xl p-8 sm:p-10 flex flex-col items-center gap-6">
+                <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">SOMUSD Faucet</h2>
+                <p className="text-white/40 text-xs">
+                  {tokenDripFormatted} SOMUSD &middot; {formatCooldown(tokenEligibility.cooldownSecs)} cooldown
+                </p>
+
+                {isConnected && somusdBalance !== undefined ? (
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-sm text-white/60">
+                      Your balance:{" "}
+                      <span className="text-white font-semibold">
+                        {Number(formatUnits(somusdBalance, 6)).toLocaleString()} SOMUSD
+                      </span>
+                    </p>
+                  </div>
+                ) : null}
+
+                {/* Button */}
+                <div className="py-4">
+                  <HeroButton
+                    state={tokenClaim.state}
+                    disabled={!tokenEligibility.isEligible || tokenClaim.state !== "idle"}
+                    disabledReason={tokenDisabledReason}
+                    onClick={tokenClaim.claim}
+                    tokenLabel="SOMUSD"
+                    successLabel={`${tokenDripFormatted} SOMUSD incoming!`}
+                  />
+                </div>
+
+                {/* Cooldown timer */}
+                {isConnected && (
+                  <CooldownTimer
+                    secondsLeft={tokenEligibility.secondsLeft}
+                    totalCooldown={tokenEligibility.cooldownSecs}
+                  />
+                )}
+
+                {/* SOMUSD Stats */}
+                <TokenFaucetStats />
+              </div>
+            )}
 
             {/* Live Feed */}
             <LiveFeed events={events} />

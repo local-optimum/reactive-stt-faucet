@@ -4,12 +4,13 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { createPublicClient, webSocket, keccak256, toHex, decodeAbiParameters } from "viem";
 import { SDK } from "@somnia-chain/reactivity";
 import { somniaTestnet } from "@/lib/chains";
-import { FAUCET_HANDLER_ADDRESS } from "@/lib/contracts";
+import { FAUCET_HANDLER_ADDRESS, TOKEN_FAUCET_HANDLER_ADDRESS } from "@/lib/contracts";
 
 export type FeedEvent = {
   id: string;
   address: `0x${string}`;
   type: "granted" | "denied";
+  token: "STT" | "SOMUSD";
   reason?: string;
   timestamp: number;
 };
@@ -18,6 +19,8 @@ const MAX_EVENTS = 20;
 
 const GRANTED_TOPIC = keccak256(toHex("FaucetGranted(address,uint256)"));
 const DENIED_TOPIC = keccak256(toHex("FaucetDenied(address,string)"));
+const TOKEN_GRANTED_TOPIC = keccak256(toHex("TokenFaucetGranted(address,uint256)"));
+const TOKEN_DENIED_TOPIC = keccak256(toHex("TokenFaucetDenied(address,string)"));
 
 export function useLiveFeed() {
   const [events, setEvents] = useState<FeedEvent[]>([]);
@@ -38,9 +41,14 @@ export function useLiveFeed() {
 
       const sdk = new SDK({ public: wsClient });
 
+      const eventSources = [FAUCET_HANDLER_ADDRESS];
+      if (TOKEN_FAUCET_HANDLER_ADDRESS && TOKEN_FAUCET_HANDLER_ADDRESS !== "0x") {
+        eventSources.push(TOKEN_FAUCET_HANDLER_ADDRESS);
+      }
+
       const result = await sdk.subscribe({
         ethCalls: [],
-        eventContractSources: [FAUCET_HANDLER_ADDRESS],
+        eventContractSources: eventSources,
         onData: (data: { result: { topics: `0x${string}`[]; data: `0x${string}` } }) => {
           if (cancelled) return;
           const { topics, data: eventData } = data.result;
@@ -49,7 +57,7 @@ export function useLiveFeed() {
           const id = `${Date.now()}-${requester}`;
 
           if (topic0 === GRANTED_TOPIC) {
-            addEvent({ id, address: requester, type: "granted", timestamp: Date.now() });
+            addEvent({ id, address: requester, type: "granted", token: "STT", timestamp: Date.now() });
           } else if (topic0 === DENIED_TOPIC) {
             let reason = "cooldown";
             try {
@@ -59,7 +67,19 @@ export function useLiveFeed() {
               );
               reason = decoded;
             } catch {}
-            addEvent({ id, address: requester, type: "denied", reason, timestamp: Date.now() });
+            addEvent({ id, address: requester, type: "denied", token: "STT", reason, timestamp: Date.now() });
+          } else if (topic0 === TOKEN_GRANTED_TOPIC) {
+            addEvent({ id, address: requester, type: "granted", token: "SOMUSD", timestamp: Date.now() });
+          } else if (topic0 === TOKEN_DENIED_TOPIC) {
+            let reason = "cooldown";
+            try {
+              const [decoded] = decodeAbiParameters(
+                [{ name: "reason", type: "string" }],
+                eventData
+              );
+              reason = decoded;
+            } catch {}
+            addEvent({ id, address: requester, type: "denied", token: "SOMUSD", reason, timestamp: Date.now() });
           }
         },
         onError: (err: Error) => {

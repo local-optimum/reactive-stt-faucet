@@ -12,26 +12,29 @@ const stateConfig = {
   error: { color: "#ef4444" },
 };
 
-const stateLabel: Record<ClaimState, string> = {
-  idle: "Request STT",
-  pending: "Requesting...",
-  confirming: "Confirming...",
-  success: "1 STT incoming!",
-  denied: "Denied",
-  error: "Error",
-};
-
 interface HeroButtonProps {
   state: ClaimState;
   disabled: boolean;
   disabledReason?: string;
   onClick: () => void;
+  tokenLabel?: string;
+  successLabel?: string;
 }
 
-export function HeroButton({ state, disabled, disabledReason, onClick }: HeroButtonProps) {
+export function HeroButton({ state, disabled, disabledReason, onClick, tokenLabel = "STT", successLabel }: HeroButtonProps) {
   const cfg = stateConfig[state];
   const isLoading = state === "pending" || state === "confirming";
-  const label = disabled && disabledReason ? disabledReason : stateLabel[state];
+
+  const stateLabels: Record<ClaimState, string> = {
+    idle: `Request ${tokenLabel}`,
+    pending: "Requesting...",
+    confirming: "Confirming...",
+    success: successLabel || `${tokenLabel} incoming!`,
+    denied: "Denied",
+    error: "Error",
+  };
+
+  const label = disabled && disabledReason ? disabledReason : stateLabels[state];
 
   return (
     <div className="relative flex items-center justify-center w-40 h-40">

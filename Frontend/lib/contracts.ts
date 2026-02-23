@@ -3,6 +3,14 @@ export const FAUCET_REQUEST_ADDRESS = (process.env
 export const FAUCET_HANDLER_ADDRESS = (process.env
   .NEXT_PUBLIC_FAUCET_HANDLER_ADDRESS || "0x") as `0x${string}`;
 
+export const TOKEN_FAUCET_REQUEST_ADDRESS = (process.env
+  .NEXT_PUBLIC_TOKEN_FAUCET_REQUEST_ADDRESS || "0x") as `0x${string}`;
+export const TOKEN_FAUCET_HANDLER_ADDRESS = (process.env
+  .NEXT_PUBLIC_TOKEN_FAUCET_HANDLER_ADDRESS || "0x") as `0x${string}`;
+
+export const SOMUSD_ADDRESS =
+  "0x02B8316775057E2096471473663D51CeAfBE3e3b" as `0x${string}`;
+
 export const faucetRequestABI = [
   {
     name: "request",
@@ -76,5 +84,98 @@ export const faucetHandlerABI = [
       { name: "requester", type: "address", indexed: true },
       { name: "reason", type: "string", indexed: false },
     ],
+  },
+] as const;
+
+export const tokenFaucetRequestABI = [
+  {
+    name: "request",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [],
+    outputs: [],
+  },
+  {
+    name: "TokenFaucetRequested",
+    type: "event",
+    inputs: [{ name: "requester", type: "address", indexed: true }],
+  },
+] as const;
+
+export const tokenFaucetHandlerABI = [
+  {
+    name: "cooldown",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "dripAmount",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "lastGrant",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "totalGranted",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "totalClaimers",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "TokenFaucetGranted",
+    type: "event",
+    inputs: [
+      { name: "requester", type: "address", indexed: true },
+      { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    name: "TokenFaucetDenied",
+    type: "event",
+    inputs: [
+      { name: "requester", type: "address", indexed: true },
+      { name: "reason", type: "string", indexed: false },
+    ],
+  },
+] as const;
+
+export const erc20ABI = [
+  {
+    name: "balanceOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "symbol",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "string" }],
+  },
+  {
+    name: "decimals",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint8" }],
   },
 ] as const;

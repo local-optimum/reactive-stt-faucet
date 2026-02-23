@@ -1,49 +1,40 @@
 "use client";
 
-import { useReadContract, useBalance } from "wagmi";
+import { useReadContract } from "wagmi";
 import { useEffect, useState } from "react";
-import { FAUCET_HANDLER_ADDRESS, faucetHandlerABI } from "@/lib/contracts";
+import {
+  TOKEN_FAUCET_HANDLER_ADDRESS,
+  tokenFaucetHandlerABI,
+} from "@/lib/contracts";
 
-export function useEligibility(address: `0x${string}` | undefined) {
+export function useTokenEligibility(address: `0x${string}` | undefined) {
   const [secondsLeft, setSecondsLeft] = useState(0);
 
   const { data: cooldown } = useReadContract({
-    address: FAUCET_HANDLER_ADDRESS,
-    abi: faucetHandlerABI,
+    address: TOKEN_FAUCET_HANDLER_ADDRESS,
+    abi: tokenFaucetHandlerABI,
     functionName: "cooldown",
   });
 
-  const { data: maxBalance } = useReadContract({
-    address: FAUCET_HANDLER_ADDRESS,
-    abi: faucetHandlerABI,
-    functionName: "maxBalance",
-  });
-
   const { data: dripAmount } = useReadContract({
-    address: FAUCET_HANDLER_ADDRESS,
-    abi: faucetHandlerABI,
+    address: TOKEN_FAUCET_HANDLER_ADDRESS,
+    abi: tokenFaucetHandlerABI,
     functionName: "dripAmount",
   });
 
   const { data: lastGrant, refetch: refetchLastGrant } = useReadContract({
-    address: FAUCET_HANDLER_ADDRESS,
-    abi: faucetHandlerABI,
+    address: TOKEN_FAUCET_HANDLER_ADDRESS,
+    abi: tokenFaucetHandlerABI,
     functionName: "lastGrant",
     args: address ? [address] : undefined,
     query: { enabled: !!address },
   });
 
-  const { data: balance, refetch: refetchBalance } = useBalance({
-    address,
-    query: { enabled: !!address },
-  });
-
   const refetch = () => {
     refetchLastGrant();
-    refetchBalance();
   };
 
-  const cooldownSecs = cooldown ? Number(cooldown) : 3600;
+  const cooldownSecs = cooldown ? Number(cooldown) : 86400;
 
   useEffect(() => {
     if (!lastGrant) {
@@ -70,21 +61,14 @@ export function useEligibility(address: `0x${string}` | undefined) {
   }, [lastGrant, cooldownSecs]);
 
   const isOnCooldown = secondsLeft > 0;
-  const maxBal = maxBalance ?? BigInt(5e18);
-  const balanceTooHigh =
-    balance !== undefined && balance.value >= maxBal;
-  const isEligible = !!address && !isOnCooldown && !balanceTooHigh;
-
-  const drip = dripAmount ?? BigInt(5e17);
+  const isEligible = !!address && !isOnCooldown;
+  const drip = dripAmount ?? BigInt(1000 * 1e6);
 
   return {
     isEligible,
     isOnCooldown,
-    balanceTooHigh,
     secondsLeft,
     cooldownSecs,
-    balance,
-    maxBal,
     drip,
     refetch,
   };

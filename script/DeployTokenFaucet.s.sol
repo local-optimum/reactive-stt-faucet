@@ -2,22 +2,14 @@
 pragma solidity 0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
-import {FaucetRequest} from "../src/FaucetRequest.sol";
-import {FaucetHandler} from "../src/FaucetHandler.sol";
 import {TokenFaucetRequest} from "../src/TokenFaucetRequest.sol";
 import {TokenFaucetHandler} from "../src/TokenFaucetHandler.sol";
 
-contract DeployScript is Script {
+contract DeployTokenFaucetScript is Script {
     function run() public {
         address somusdAddress = vm.envAddress("SOMUSD_ADDRESS");
 
         vm.startBroadcast();
-
-        FaucetRequest faucetRequest = new FaucetRequest();
-        console.log("FaucetRequest deployed at:", address(faucetRequest));
-
-        FaucetHandler faucetHandler = new FaucetHandler();
-        console.log("FaucetHandler deployed at:", address(faucetHandler));
 
         TokenFaucetRequest tokenFaucetRequest = new TokenFaucetRequest();
         console.log("TokenFaucetRequest deployed at:", address(tokenFaucetRequest));
