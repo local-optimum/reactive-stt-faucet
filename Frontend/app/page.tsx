@@ -59,8 +59,11 @@ export default function Home() {
     : undefined;
 
   const tokenDripFormatted = Number(formatUnits(tokenEligibility.drip, 6)).toLocaleString();
+  const tokenMaxBalFormatted = Number(formatUnits(tokenEligibility.maxBal, 6)).toLocaleString();
   const tokenDisabledReason = !isConnected
     ? "Connect Wallet"
+    : tokenEligibility.balanceTooHigh
+    ? `Balance ≥ ${tokenMaxBalFormatted} SOMUSD`
     : tokenEligibility.isOnCooldown
     ? "Cooldown Active"
     : undefined;
@@ -136,7 +139,7 @@ export default function Home() {
               <div className="bg-white/[0.03] backdrop-blur border border-white/10 rounded-2xl p-8 sm:p-10 flex flex-col items-center gap-6">
                 <h2 className="text-sm font-medium text-white/50 uppercase tracking-wider">SOMUSD Faucet</h2>
                 <p className="text-white/40 text-xs">
-                  {tokenDripFormatted} SOMUSD &middot; {formatCooldown(tokenEligibility.cooldownSecs)} cooldown
+                  {tokenDripFormatted} SOMUSD &middot; {formatCooldown(tokenEligibility.cooldownSecs)} cooldown &middot; {tokenMaxBalFormatted} SOMUSD max balance
                 </p>
 
                 {isConnected && somusdBalance !== undefined ? (
@@ -147,6 +150,11 @@ export default function Home() {
                         {Number(formatUnits(somusdBalance, 6)).toLocaleString()} SOMUSD
                       </span>
                     </p>
+                    {tokenEligibility.balanceTooHigh && (
+                      <p className="text-xs text-red-400/80">
+                        Must be below {tokenMaxBalFormatted} SOMUSD to claim
+                      </p>
+                    )}
                   </div>
                 ) : null}
 

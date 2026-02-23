@@ -83,6 +83,18 @@ contract TokenFaucetHandlerTest is Test {
         assertEq(handler.totalClaimers(), 1);
     }
 
+    function test_DenyBalanceTooHigh() public {
+        // Give requester tokens at the maxBalance threshold
+        token.mint(requester, handler.maxBalance());
+
+        vm.expectEmit(true, false, false, true);
+        emit TokenFaucetDenied(requester, "balance_too_high");
+
+        _callOnEvent(requester);
+
+        assertEq(handler.totalGranted(), 0);
+    }
+
     function test_DenyFaucetEmpty() public {
         // Deploy a new handler with no token balance
         TokenFaucetHandler emptyHandler = new TokenFaucetHandler(address(token));
@@ -121,6 +133,11 @@ contract TokenFaucetHandlerTest is Test {
         assertEq(handler.dripAmount(), 500 * 1e6);
     }
 
+    function test_OwnerCanSetMaxBalance() public {
+        handler.setMaxBalance(5000 * 1e6);
+        assertEq(handler.maxBalance(), 5000 * 1e6);
+    }
+
     function test_OwnerCanSetToken() public {
         MockERC20 newToken = new MockERC20();
         handler.setToken(address(newToken));
@@ -133,6 +150,8 @@ contract TokenFaucetHandlerTest is Test {
         handler.setCooldown(1 hours);
         vm.expectRevert("Not owner");
         handler.setDripAmount(500 * 1e6);
+        vm.expectRevert("Not owner");
+        handler.setMaxBalance(500 * 1e6);
         vm.expectRevert("Not owner");
         handler.setToken(address(0));
         vm.stopPrank();

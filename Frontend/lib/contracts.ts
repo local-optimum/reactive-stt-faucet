@@ -118,6 +118,13 @@ export const tokenFaucetHandlerABI = [
     outputs: [{ name: "", type: "uint256" }],
   },
   {
+    name: "maxBalance",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
     name: "lastGrant",
     type: "function",
     stateMutability: "view",

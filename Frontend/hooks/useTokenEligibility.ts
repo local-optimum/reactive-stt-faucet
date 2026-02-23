@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import {
   TOKEN_FAUCET_HANDLER_ADDRESS,
   tokenFaucetHandlerABI,
+  SOMUSD_ADDRESS,
+  erc20ABI,
 } from "@/lib/contracts";
 
 export function useTokenEligibility(address: `0x${string}` | undefined) {
@@ -22,6 +24,12 @@ export function useTokenEligibility(address: `0x${string}` | undefined) {
     functionName: "dripAmount",
   });
 
+  const { data: maxBalance } = useReadContract({
+    address: TOKEN_FAUCET_HANDLER_ADDRESS,
+    abi: tokenFaucetHandlerABI,
+    functionName: "maxBalance",
+  });
+
   const { data: lastGrant, refetch: refetchLastGrant } = useReadContract({
     address: TOKEN_FAUCET_HANDLER_ADDRESS,
     abi: tokenFaucetHandlerABI,
@@ -30,8 +38,17 @@ export function useTokenEligibility(address: `0x${string}` | undefined) {
     query: { enabled: !!address },
   });
 
+  const { data: tokenBalance, refetch: refetchTokenBalance } = useReadContract({
+    address: SOMUSD_ADDRESS,
+    abi: erc20ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
+
   const refetch = () => {
     refetchLastGrant();
+    refetchTokenBalance();
   };
 
   const cooldownSecs = cooldown ? Number(cooldown) : 86400;
@@ -61,14 +78,18 @@ export function useTokenEligibility(address: `0x${string}` | undefined) {
   }, [lastGrant, cooldownSecs]);
 
   const isOnCooldown = secondsLeft > 0;
-  const isEligible = !!address && !isOnCooldown;
+  const maxBal = maxBalance ?? BigInt(10_000 * 1e6);
+  const balanceTooHigh = tokenBalance !== undefined && tokenBalance >= maxBal;
+  const isEligible = !!address && !isOnCooldown && !balanceTooHigh;
   const drip = dripAmount ?? BigInt(1000 * 1e6);
 
   return {
     isEligible,
     isOnCooldown,
+    balanceTooHigh,
     secondsLeft,
     cooldownSecs,
+    maxBal,
     drip,
     refetch,
   };

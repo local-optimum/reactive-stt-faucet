@@ -18,6 +18,7 @@ contract TokenFaucetHandler is SomniaEventHandler, ReentrancyGuard {
 
     uint256 public cooldown = 24 hours;
     uint256 public dripAmount = 1000 * 1e6; // 1000 SOMUSD (6 decimals)
+    uint256 public maxBalance = 10_000 * 1e6; // 10,000 SOMUSD
 
     address public owner;
 
@@ -37,6 +38,10 @@ contract TokenFaucetHandler is SomniaEventHandler, ReentrancyGuard {
 
     function setDripAmount(uint256 _dripAmount) external onlyOwner {
         dripAmount = _dripAmount;
+    }
+
+    function setMaxBalance(uint256 _maxBalance) external onlyOwner {
+        maxBalance = _maxBalance;
     }
 
     function setToken(address _token) external onlyOwner {
@@ -68,6 +73,9 @@ contract TokenFaucetHandler is SomniaEventHandler, ReentrancyGuard {
         uint256 last = lastGrant[requester];
         if (last != 0 && block.timestamp - last < cooldown) {
             return (false, "cooldown");
+        }
+        if (token.balanceOf(requester) >= maxBalance) {
+            return (false, "balance_too_high");
         }
         if (token.balanceOf(address(this)) < dripAmount) {
             return (false, "faucet_empty");
